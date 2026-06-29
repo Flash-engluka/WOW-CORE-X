@@ -20,6 +20,10 @@
   let highlightCells=new Set();
   let tokens={};
   let hoverCell=null;
+  const boardImg=new Image();
+  let boardImgLoaded=false;
+  boardImg.src='assets/board.png';
+  boardImg.onload=()=>{ boardImgLoaded=true; render(); };
 
   function init(canvasEl, clickHandler){
     canvas=canvasEl; ctx=canvas.getContext('2d');
@@ -29,7 +33,6 @@
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleHover);
     canvas.addEventListener('mouseleave', ()=>{hoverCell=null; render();});
-    // 부모 컨테이너 크기 변화 자동 추적 (화면 전환 시 안정적인 리사이즈)
     if (window.ResizeObserver && canvas.parentElement) {
       new ResizeObserver(() => resize()).observe(canvas.parentElement);
     }
@@ -53,62 +56,51 @@
     if(!ctx) return;
     const W=canvas.width, H=canvas.height;
     ctx.clearRect(0,0,W,H);
-    ctx.fillStyle='rgba(13,0,16,0.55)'; ctx.fillRect(0,0,W,H);
 
-    // 간선
-    ctx.lineWidth=Math.max(1.5, W*0.004);
-    const drawn=new Set();
-    for(const [id,node] of Object.entries(BOARD.nodes)){
-      const a=toCanvas(node);
-      for(const nb of node.adj){
-        const key=[id,nb].sort().join('-');
-        if(drawn.has(key)) continue; drawn.add(key);
-        const nbNode=BOARD.nodes[nb]; if(!nbNode) continue;
-        const b=toCanvas(nbNode);
-        const isCoreEdge=(id==='CORE'||nb==='CORE');
-        ctx.strokeStyle=isCoreEdge?'rgba(224,127,212,0.9)':'rgba(160,112,232,0.45)';
-        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-      }
+    // 보드 이미지 배경
+    if(boardImgLoaded){
+      ctx.drawImage(boardImg, 0, 0, W, H);
+    } else {
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
     }
 
-    // 노드
     const baseR=Math.max(8, W*0.018);
+
+    // 하이라이트 + 호버
     for(const [id,node] of Object.entries(BOARD.nodes)){
       const p=toCanvas(node);
-      let r=baseR, fill='rgba(40,30,60,0.85)', stroke='#a070e8';
-      if(node.isCore){ r=baseR*1.8; fill=FACTION_COLORS.CORE; stroke='#fff'; }
-      else if(node.isFaction){ r=baseR*1.5; fill=FACTION_COLORS[id]; stroke='#fff'; }
-      else if(node.isCoreGate){ stroke='#e87fd4'; fill='rgba(80,40,90,0.9)'; }
+      let r=baseR;
+      if(node.isCore) r=baseR*1.8;
+      else if(node.isFaction) r=baseR*1.5;
 
       if(highlightCells.has(id)){
-        ctx.save(); ctx.shadowColor='#f5c842'; ctx.shadowBlur=18;
+        ctx.save(); ctx.shadowColor='#f5c842'; ctx.shadowBlur=20;
         ctx.strokeStyle='#f5c842'; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.arc(p.x,p.y,r+4,0,Math.PI*2); ctx.stroke(); ctx.restore();
+        ctx.beginPath(); ctx.arc(p.x,p.y,r+5,0,Math.PI*2); ctx.stroke(); ctx.restore();
+        ctx.save(); ctx.globalAlpha=0.25; ctx.fillStyle='#f5c842';
+        ctx.beginPath(); ctx.arc(p.x,p.y,r+5,0,Math.PI*2); ctx.fill(); ctx.restore();
       }
-      if(hoverCell===id) stroke='#ffb3f0';
-
-      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
-      ctx.fillStyle=fill; ctx.fill();
-      ctx.lineWidth=2; ctx.strokeStyle=stroke; ctx.stroke();
-
-      ctx.fillStyle=(node.isCore||node.isFaction)?'#0d0010':'#f0e8ff';
-      ctx.font=`${Math.max(8,r*0.9)}px "Press Start 2P", monospace`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      const lbl = node.isFaction ? id[0] : (node.isCore ? 'C' : id);
-      ctx.fillText(lbl, p.x, p.y);
-
-      // 아이템 표시 (안개 처리)
-      drawItemsOnCell(ctx, id, p, baseR);
+      if(hoverCell===id){
+        ctx.save(); ctx.globalAlpha=0.3; ctx.fillStyle='#ffb3f0';
+        ctx.beginPath(); ctx.arc(p.x,p.y,r+3,0,Math.PI*2); ctx.fill(); ctx.restore();
+      }
     }
 
     // 토큰
     for(const [faction,cellId] of Object.entries(tokens)){
       const node=BOARD.nodes[cellId]; if(!node) continue;
-      const p=toCanvas(node); const r=baseR*0.7;
-      ctx.beginPath(); ctx.arc(p.x, p.y-baseR*1.3, r,0,Math.PI*2);
+      const p=toCanvas(node); const r=baseR*0.75;
+      ctx.save();
+      ctx.shadowColor='#000'; ctx.shadowBlur=6;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r,0,Math.PI*2);
       ctx.fillStyle=FACTION_COLORS[faction]||'#fff'; ctx.fill();
-      ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke();
-      ctx.lineWidth=1.5; ctx.strokeStyle='#0d0010'; ctx.stroke();
+      ctx.lineWidth=2.5; ctx.strokeStyle='#fff'; ctx.stroke();
+      ctx.restore();
+      // 진영 첫 글자
+      ctx.fillStyle='#000';
+      ctx.font=`bold ${Math.max(7,r*0.85)}px "Press Start 2P", monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(faction[0], p.x, p.y);
     }
   }
 
