@@ -29,9 +29,13 @@
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('mousemove', handleHover);
     canvas.addEventListener('mouseleave', ()=>{hoverCell=null; render();});
-    // 부모 컨테이너 크기 변화 자동 추적 (화면 전환 시 안정적인 리사이즈)
     if (window.ResizeObserver && canvas.parentElement) {
-      new ResizeObserver(() => resize()).observe(canvas.parentElement);
+      new ResizeObserver(() => {
+        // board-wrap 크기가 실제로 잡혔을 때만 리사이즈
+        if (canvas.parentElement.clientWidth > 0 && canvas.parentElement.clientHeight > 0) {
+          resize();
+        }
+      }).observe(canvas.parentElement);
     }
   }
 

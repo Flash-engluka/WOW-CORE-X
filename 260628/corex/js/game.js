@@ -307,7 +307,6 @@
       player.inventory.push({ key: target.name, upgraded: false });
       this.boardItems[player.position].splice(itemIndex, 1);
 
-      player.hasMoved = true;
       player.hasActed = true;
       this.log(`${player.name}이(가) ${target.name} 줍기${cost > 0 ? ` (-${cost}G)` : ''}`);
       this.checkTodos(player);

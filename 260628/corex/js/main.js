@@ -467,6 +467,7 @@
         cur.position = 'CORE';
         cur.pendingUpgradeToken = true;
         Board.moveToken(cur.faction.toUpperCase(), 'CORE');
+        // 조커 ①은 이동 행위가 아니므로 hasActed 건드리지 않음 (조커는 행위로 인정 X)
         toast('조커 ① — Core로 즉시 이동', 'gold');
         break;
       case 2:
