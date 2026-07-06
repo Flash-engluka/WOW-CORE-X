@@ -203,8 +203,12 @@
   <!-- ======================================================== -->
   <!-- Firebase SDK (compat 버전, 모듈 없이 사용)               -->
   <!-- ======================================================== -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script>
+    // Firebase 로드 실패해도 게임이 동작하도록 더미 객체 선언
+    window.firebase = window.firebase || null;
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" onerror="console.warn('Firebase SDK 로드 실패 — 온라인 기능 비활성화')"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js" onerror="console.warn('Firebase DB SDK 로드 실패')"></script>
 
   <!-- 게임 스크립트 -->
   <script src="js/sprites.js"></script>

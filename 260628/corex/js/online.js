@@ -35,8 +35,11 @@
       console.warn('[online] Firebase config가 비어있습니다. online.js 상단 FIREBASE_CONFIG를 채우세요.');
       return false;
     }
+    if (typeof firebase === 'undefined' || !firebase) {
+      console.warn('[online] Firebase SDK가 로드되지 않았습니다.');
+      return false;
+    }
     try {
-      // eslint-disable-next-line no-undef
       firebase.initializeApp(FIREBASE_CONFIG);
       // eslint-disable-next-line no-undef
       db = firebase.database();
